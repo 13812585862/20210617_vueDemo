@@ -12,8 +12,10 @@
         <form>
           <div :class="{on:loginWay}">
             <section class="login_message">
-              <input type="tel" maxlength="11" placeholder="手机号" />
-              <button disabled="disabled" class="get_verification">获取验证码</button>
+              <input type="text" maxlength="11" placeholder="手机号" v-model="phone"/>
+              <button :disabled="!rightPhone" class="get_verification" :class="{right_phone:rightPhone}" @click.prevent="getCode">
+                {{computeTime>0?`已发送(${computeTime}s)`:'获取验证码'}}
+              </button>
             </section>
             <section class="login_verification">
               <input type="tel" maxlength="8" placeholder="验证码" />
@@ -29,10 +31,11 @@
                 <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名" />
               </section>
               <section class="login_verification">
-                <input type="tel" maxlength="8" placeholder="密码" />
-                <div class="switch_button off">
-                  <div class="switch_circle"></div>
-                  <span class="switch_text">...</span>
+                <input type="text" maxlength="8" placeholder="密码" v-if="showPwd" v-model="pwd"/>
+                <input type="password" maxlength="8" placeholder="密码" v-else v-model="pwd"/>
+                <div class="switch_button" :class="showPwd?'on':'off'" @click="showPwd=!showPwd">
+                  <div class="switch_circle" :class="{right:showPwd}"></div>
+                  <span class="switch_text">{{showPwd?'abc':'...'}}</span>
                 </div>
               </section>
               <section class="login_message">
@@ -57,6 +60,29 @@ export default {
   data(){
     return{
       loginWay:true,//true代表短信登录
+      computeTime:0,
+      showPwd:false,
+      phone:'',
+      pwd:''
+    }
+  },
+  computed:{
+    rightPhone(){
+      var re = /^1\d{10}$/;
+      return re.test(this.phone)
+    }
+  },
+  methods: {
+    getCode() {
+      if (!this.computeTime) {
+        this.computeTime = 30
+        const invert = setInterval(() => {
+          this.computeTime--
+          if (this.computeTime <= 0) {
+            clearInterval(invert)
+          }
+        }, 1000)
+      }
     }
   }
 };
@@ -133,7 +159,7 @@ export default {
             font-size: 14px;
             background: #fff;
 
-            .get_verification {
+            .get_verification{
               position: absolute;
               top: 50%;
               right: 10px;
@@ -142,6 +168,9 @@ export default {
               color: #ccc;
               font-size: 14px;
               background: transparent;
+              &.right_phone {
+                color:#333333
+              }
             }
           }
 
@@ -192,6 +221,9 @@ export default {
                 background: #fff;
                 box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
                 transition: transform 0.3s;
+                &.right{
+                  transform translateX(27px)
+                }
               }
             }
           }
